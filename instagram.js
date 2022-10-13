@@ -1,11 +1,7 @@
 class Instagram {
     constructor() {
-        // Write code here...
-        // rather than having an array of arrays or array of objects
-        // think it has better performance to have two separate arrays
-        // where 
-        // photoId = this.photoIds[i] is posted by 
-        // userId = this.posterIds[i]
+        //Time: O(1) -- empty POJO initialize
+        //Space: O(1) -- creating 2 empty POJOs
 
         // instagram has an internal count variable
         // that keeps track of number of photos posted
@@ -18,7 +14,6 @@ class Instagram {
         
         // each user has a set of followed users
         this.followedUsers = {};
-
     }
 
     postPhoto(userId, photoId) {
@@ -27,14 +22,15 @@ class Instagram {
         this.postNumber+=1;
         const userPosts = this.recentPostsByUser[userId] || [];
         // store userId so when we use heap we know which
-        // array to get replacement in heap from 
-        userPosts.push([this.postNumber, photoId, userId]);
+        // array to get replacement in heap from
+        const postNum = this.postNumber;
+        userPosts.push({postNum, photoId, userId});
         if (userPosts.length > 10) userPosts.unshift();
         this.recentPostsByUser = userPosts;
     }
 
     getFeed(userId) {
-        const followedSet = this.followedUsers[userId];
+        
         // idea is to map each followed userId
         // to their 10 most recent photos
         // and then "merge" their photos until we have 10
@@ -54,15 +50,52 @@ class Instagram {
         // 4a. pop off most recent photo (largest postNum) and add to recent arr
         // 4b. add next most recent photo from same arr (if exists) to heap
         // 5. return recent arr
+
+        const followedSet = this.followedUsers[userId];
+        const followedIds = Array.from(followedSet);
+
+        
+        const photosByPoster = {};
+        const postPtrs = {};
+        const heap = [];
+
+        for (const id in followedIds){
+            const userPosts = this.recentPostsByUser[id];
+            photosByPoster[id] = userPosts;
+            postPtrs[id] = userPosts.length - 1;
+            
+            if (postPtrs[id] < 0) continue;
+            // if user posts is not empty -- add to heap
+            heap.insert(userPosts[postPtrs[id]]);
+            postPtrs[id]--;
+        }
+
+        const mostRecentPosts = [];
+
+        for(let i = 0; i < 10 && heap.length > 0; i++){
+            const mostRecentPost = heap.pop();
+            const posterId = mostRecentPost.userId;
+            const postIdx = postPtrs[posterId];
+            if (postIdx >= 0){
+                heap.insert(photosByPoster[posterId][postIdx]);
+                postPtrs[posterId]--;
+            }
+        }
+
+        return mostRecentPosts;
     }
 
     follow(followerId, followeeId) {
+        //Time: O(1) -- at worst create new empty set and add one item
+        //Space: O(1) -- at worst create new empty set and add one item
         // make sure set is initialized
         this.followedUsers[followeeId] ||= new Set();
         this.followedUsers[followeeId].add(followerId);
     }
 
     unfollow(followerId, followeeId) {
+        //Time: O(1) -- at worst remove one item from set, O(1) op
+        //Space: O(1) -- at worst remove one item from set, O(1) op
         const followedSet = this.followedUsers[followeeId];
         if(followedSet) followedSet.delete(followerId);
     }
