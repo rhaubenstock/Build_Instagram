@@ -14,15 +14,17 @@ class maxHeap {
         //Space: O(1) -- modifies array in place
         const heapSize = this.heap.length;
         const heap = this.heap;
-
+        
         let swapHappened = false;
 
         do {
-            let left = 2 * i;
+            swapHappened = false;
+            let left = 2 * i + 1;
             let right = left + 1;
             let largest = i;
-            if (left < heapSize && heap[left] < heap[largest]) largest = left;
-            if (right < heapSize && heap[right] < heap[largest]) largest = right;
+            
+            if (left < heapSize && heap[left].postNum > heap[largest].postNum) largest = left;
+            if (right < heapSize && heap[right].postNum > heap[largest].postNum) largest = right;
 
             if (i !== largest) {
                 const temp = heap[i];
@@ -34,18 +36,29 @@ class maxHeap {
         } while (swapHappened)
     }
 
+    computeHeight(){
+        // don't want to use builtin log bc floating pt op -- can be inaccurate
+        //Time: O(logN) -- could be faster using binary search on powers probably
+        //Space: O(1)
+
+        const heapSize = this.heap.length;
+        let height = 0;
+        while(2**height < heapSize) height+= 1;
+        return height;
+    }
+
     heapify(){
         //Time: O(N) -- see https://stackoverflow.com/questions/9755721/how-can-building-a-heap-be-on-time-complexity
         //           reasoning is more nodes at "bottom" of heap --
-        //           amount of work to perlocate a node at height h to bottom of heap 
+        //           amount of work to perlocate a node at height h to bottom of heap
         //           is O(log(N/h)) -- see percolateDown for in depth
         //           number of nodes at height h is 2**h for full heap
         //           so total work is sum_h=1 to logN of (num_nodes at height h) * (amt of work for each node at height h)
         //           which is sum_h=0 to log(N) of (2**h) *log(N/2**h)
         //           can let i = log(N) - h and sum from i = 0 to log(N)
-        //           -> 
+        //           ->
         //            = 0 * N/2 + 1 * N/4 + 2 * N/8 + ... + log(N) * 1
-        //            = sum(k=1 to log(N)) of (k*N)/2**(k+1) 
+        //            = sum(k=1 to log(N)) of (k*N)/2**(k+1)
         //            = N/4 *sum(k=1 to log(N)) of k*x**(k-1) eval at x = 1/2
         //            < N/4 * sum(k=1 to infty) of k*x**(k-1)
         //            = N/4 * d/dx (sum(k=1 to infty) of x**k)
@@ -56,8 +69,10 @@ class maxHeap {
 
 
         //Space: O(1) -- modifies array in place
-        const heapSize = this.heap.length;
-        for(let i = heapSize-1; i >= 0; i--){
+        //const height = this.computeHeight()
+        // know that all elements at bottom of heap don't need to move
+        const height = this.computeHeight();
+        for(let i = 2**(height-1); i >= 0; i--){
             this.percolateDown(i);
         }
     }
@@ -192,9 +207,9 @@ class Instagram {
             heapInitializer.push(userPosts[postPtrs[id]]);
             postPtrs[id]--;
         }
-
+        
         const heap = new maxHeap(heapInitializer);
-
+        
         const mostRecentPosts = [];
         for(let i = 0; i < 10 && heap.length() > 0; i++){
             const mostRecentPost = heap.pop();
@@ -206,7 +221,7 @@ class Instagram {
             }
             mostRecentPosts.push(mostRecentPost.photoId);
         }
-        console.log(mostRecentPosts);
+        // console.log(mostRecentPosts);
         return mostRecentPosts;
     }
 
