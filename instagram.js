@@ -143,8 +143,6 @@ class Instagram {
         //           -- each pop is log(N) time and each insert is log(N) time
         //           -- overall O(N) + 10 * O(log(N)) + 9 * O(log(N)) = O(N)
 
-        // inserting N photos into heap = log(1) + log(2) + ... + log(N) time 
-        // which is O(NlogN) 
 
 
         //Space: O(N) -- must create N arrays of 10 photos each
