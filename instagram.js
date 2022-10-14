@@ -1,6 +1,65 @@
 class maxHeap {
-    constructor() {
-        this.heap = [];
+    constructor(arr) {
+        //Time: O(N) -- heapify is O(N), see heapify comments for further info
+        //Space: O(1) -- stores incoming array and heapify is O(1)
+        this.heap = arr;
+        this.heapify();
+    }
+
+    percolateDown(i){
+        // from here on we assume log is log base 2 -- 
+        //Time: O(log(N/i)) -- might need log(N) swaps downward to keep heap prop
+        //                  -- height of tree is log(N), height of index i is floor(log(i)) which is O(log(i))
+        //                  -- max swaps = difference in height = log(N) - O(log(i)) = O(log(N/i))
+        //Space: O(1) -- modifies array in place
+        const heapSize = this.heap.length;
+        const heap = this.heap;
+
+        let swapHappened = false;
+
+        do {
+            let left = 2 * i;
+            let right = left + 1;
+            let largest = i;
+            if (left < heapSize && heap[left] < heap[largest]) largest = left;
+            if (right < heapSize && heap[right] < heap[largest]) largest = right;
+
+            if (i !== largest) {
+                const temp = heap[i];
+                heap[i] = heap[largest];
+                heap[largest] = temp;
+                i = largest;
+                swapHappened = true;
+            }
+        } while (swapHappened)
+    }
+
+    heapify(){
+        //Time: O(N) -- see https://stackoverflow.com/questions/9755721/how-can-building-a-heap-be-on-time-complexity
+        //           reasoning is more nodes at "bottom" of heap --
+        //           amount of work to perlocate a node at height h to bottom of heap 
+        //           is O(log(N/h)) -- see percolateDown for in depth
+        //           number of nodes at height h is 2**h for full heap
+        //           so total work is sum_h=1 to logN of (num_nodes at height h) * (amt of work for each node at height h)
+        //           which is sum_h=0 to log(N) of (2**h) *log(N/2**h)
+        //           can let i = log(N) - h and sum from i = 0 to log(N)
+        //           -> 
+        //            = 0 * N/2 + 1 * N/4 + 2 * N/8 + ... + log(N) * 1
+        //            = sum(k=1 to log(N)) of (k*N)/2**(k+1) 
+        //            = N/4 *sum(k=1 to log(N)) of k*x**(k-1) eval at x = 1/2
+        //            < N/4 * sum(k=1 to infty) of k*x**(k-1)
+        //            = N/4 * d/dx (sum(k=1 to infty) of x**k)
+        //            = N/4 * d/dx  (1/(1-x))
+        //            = N/4 * (1/(1-x)**2) eval at x = 1/2
+        //            = N/4 * (1/(1-1/2)**2) = N/4 * (1/(1/4)) = N/4 * 4 = N
+        //           so overall O(N).
+
+
+        //Space: O(1) -- modifies array in place
+        const heapSize = this.heap.length;
+        for(let i = heapSize-1; i >= 0; i--){
+            this.percolateDown(i);
+        }
     }
 
     insert(post){
@@ -26,28 +85,9 @@ class maxHeap {
 
         const mostRecentPost = this.heap[0];
         this.heap[0] = this.heap.pop();
-        const heapSize = this.heap.length;
-        const heap = this.heap;
-
-        let i = 0;
-        let swapHappened = false;
-
-        do {
-            let left = 2*i;
-            let right = left + 1;
-            let largest = i;
-            if (left < heapSize && heap[left] < heap[largest]) largest = left;
-            if (right < heapSize && heap[right] < heap[largest]) largest = right;
-            
-            if (i !== largest){
-                const temp = heap[i];
-                heap[i] = heap[largest];
-                heap[largest] = temp;
-                i = largest;
-                swapHappened = true;
-            }
-        } while (swapHappened)
         
+        this.percolateDown(0);
+      
         return mostRecentPost;
     }
 
@@ -94,10 +134,14 @@ class Instagram {
         //Variable definitions:
         // 1. N followed Users
 
-        //Time: O(NlogN) -- N arrays of 10 photos each
-        //           -- create heap by inserting at most N photos
+        //Time: O(N) -- N arrays of 10 photos each
+        //           -- create initial array of most recent photo for each user -- O(N) time
+        //           -- create heap by heapifying -- O(N) time
+        //           -- bc of percolate down -- see here for derivation:
+        //              https://stackoverflow.com/questions/9755721/how-can-building-a-heap-be-on-time-complexity
         //           -- have to remove 10x and insert another 9x 
         //           -- each pop is log(N) time and each insert is log(N) time
+        //           -- overall O(N) + 10 * O(log(N)) + 9 * O(log(N)) = O(N)
 
         // inserting N photos into heap = log(1) + log(2) + ... + log(N) time 
         // which is O(NlogN) 
@@ -138,7 +182,7 @@ class Instagram {
         
         const photosByPoster = {};
         const postPtrs = {};
-        const heap = new maxHeap();
+        const heapInitializer = []
 
         for (const id of followedIds){
             const userPosts = this.recentPostsByUser[id];
@@ -147,9 +191,11 @@ class Instagram {
             photosByPoster[id] = userPosts;
             postPtrs[id] = userPosts.length - 1;
             
-            heap.insert(userPosts[postPtrs[id]]);
+            heapInitializer.push(userPosts[postPtrs[id]]);
             postPtrs[id]--;
         }
+
+        const heap = new maxHeap(heapInitializer);
 
         const mostRecentPosts = [];
         for(let i = 0; i < 10 && heap.length() > 0; i++){
@@ -162,7 +208,7 @@ class Instagram {
             }
             mostRecentPosts.push(mostRecentPost.photoId);
         }
-        
+        console.log(mostRecentPosts);
         return mostRecentPosts;
     }
 
