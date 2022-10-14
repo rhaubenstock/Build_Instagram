@@ -4,6 +4,9 @@ class maxHeap {
     }
 
     insert(post){
+        //Time: O(log N) -- when inserting new maximum 
+        //               -> need log(N) swaps upward to keep heap property
+        //Space: O(1)    -- adding 1 element to array
         let idx = this.heap.length;
         this.heap.push(post);
         
@@ -17,6 +20,8 @@ class maxHeap {
     }
 
     pop(){
+        //Time: O(log N) -- might need log(N) swaps downward to keep heap prop
+        //Space: O(1)    -- removing 1 element from array
         if (this.heap.length === 1) return this.heap.pop();
 
         const mostRecentPost = this.heap[0];
@@ -47,6 +52,8 @@ class maxHeap {
     }
 
     length(){
+        //Time: O(1) -- length of array is O(1) in JS
+        //Space: O(1) -- get and return single primitive value
         return this.heap.length;
     }
 }
@@ -84,7 +91,24 @@ class Instagram {
     }
 
     getFeed(userId) {
-        
+        //Variable definitions:
+        // 1. N followed Users
+
+        //Time: O(NlogN) -- N arrays of 10 photos each
+        //           -- create heap by inserting at most N photos
+        //           -- have to remove 10x and insert another 9x 
+        //           -- each pop is log(N) time and each insert is log(N) time
+
+        // inserting N photos into heap = log(1) + log(2) + ... + log(N) time 
+        // which is O(NlogN) 
+
+
+        //Space: O(N) -- must create N arrays of 10 photos each
+        //            -- also create heap of size N
+        //            -- also create array of size 10 for return array
+        //            -- also create array of size N for tracking idxs
+
+
         // idea is to map each followed userId
         // to their 10 most recent photos
         // and then "merge" their photos until we have 10
@@ -123,7 +147,6 @@ class Instagram {
             photosByPoster[id] = userPosts;
             postPtrs[id] = userPosts.length - 1;
             
-            // if user posts is not empty -- add to heap
             heap.insert(userPosts[postPtrs[id]]);
             postPtrs[id]--;
         }
@@ -139,8 +162,7 @@ class Instagram {
             }
             mostRecentPosts.push(mostRecentPost.photoId);
         }
-        //user this to veriy
-        console.log(mostRecentPosts);
+        
         return mostRecentPosts;
     }
 
